@@ -88,7 +88,10 @@ This serves the game at http://localhost:8080, with the same touch layer the iPh
 | Path | What it is |
 | --- | --- |
 | `tools/build.mjs` | Pulls the game out of the Windows installer into `www/` and patches it for iPhone |
-| `shim/ios-shim.js`, `shim/ios-shim.css` | Touch controls, audio fixes, auto-pause, haptics, layout |
+| `shim/ios-shim.js`, `shim/ios-shim.css` | Touch controls, auto-pause, haptics, layout |
+| `shim/audio-engine.js` | Web Audio sound engine that replaces the game's `audio.js` (iOS media players were too heavy) |
+| `shim/debug-hud.js` | Diagnostics panel (three-finger tap) and Simulator-test logging |
+| `native/sim_driver.py` | Taps through the game in the Simulator (used by the test workflow) |
 | `native/configure-ios.sh` | Sets up the Xcode project: landscape lock, fullscreen, icon, launch screen, `GameViewController` |
 | `native/GameViewController.swift` | Defers edge gestures, no bounce, dark background (status bar and home indicator are hidden via `SystemBars` in `capacitor.config.json`) |
 | `capacitor.config.json` | [Capacitor](https://capacitorjs.com) app settings (bundle id `local.pokepath.td`) |
@@ -97,6 +100,11 @@ This serves the game at http://localhost:8080, with the same touch layer the iPh
 | `shim/sw.js` | Offline cache for an optional browser version (not used by the native app) |
 
 On a Mac you can open it in Xcode instead: `npm ci && npx cap add ios && npx cap sync ios && bash native/configure-ios.sh && npx cap open ios`.
+
+## Testing and troubleshooting
+
+- **Diagnostics panel:** tap the screen with **three fingers** to show or hide it. It shows JavaScript errors, every touch and what's under it, sound state and main-thread lag. Screenshot it when something misbehaves.
+- **Simulator test:** the **iPhone Simulator test** workflow (Actions tab) runs the app on the largest available iPhone Pro Max simulator. It taps through START, the tutorial and a wave, and uploads screenshots plus the app's console log as the `simulator-results` artifact.
 
 ## Known limitations
 

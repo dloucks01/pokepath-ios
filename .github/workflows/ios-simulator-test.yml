@@ -41,6 +41,9 @@ jobs:
           npx cap add ios --packagemanager SPM
           npx cap sync ios
           bash native/configure-ios.sh
+          # Test build only: diagnostics panel always on, so it logs taps/targets to the console.
+          sed -i '' 's#<script src="./ios/debug-hud.js"></script>#<script>window.PP_DEBUG = 1;</script><script src="./ios/debug-hud.js"></script>#' ios/App/App/public/index.html
+          grep -q "PP_DEBUG = 1" ios/App/App/public/index.html
 
       - name: Build for the Simulator (Debug, so JS console output reaches stdout)
         working-directory: ios/App
