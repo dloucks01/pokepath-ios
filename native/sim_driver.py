@@ -235,7 +235,15 @@ def main():
         moved_to = targets().get("tower")
         note("drag events: " + " | ".join(l.split("[pp] ", 1)[1] for l in console_lines()[before:] if "[pp] " in l and ("down" in l or "up" in l))[:400])
         check("dragging a placed Pokémon moves it", state().get("towers") == 1 and moved_to == dest, f"from {tower} to {dest}, now at {moved_to}")
+        check("a drag doesn't leave the details window open", not state().get("details"), f"state={state()}")
         shot("dragged")
+
+    # Close anything still open before the next part.
+    for _ in range(3):
+        st = state()
+        if not (st.get("details") or st.get("profile") or st.get("menu")):
+            break
+        tap("menuDock", settle=1.2)
 
     # --- Tooltips: Profile screen, long-press an achievement.
     tap("profileIcon", settle=1.5)

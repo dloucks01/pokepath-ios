@@ -229,11 +229,16 @@
 		lp.fired = true;
 		const canvas = target.closest && target.closest('canvas');
 		if (canvas) {
-			haptic();
+			const g = window.__pokeGame;
+			if (g && g.mapDragging) return; // already dragging a Pokémon: not a long-press
 			// Same as right-click on the map: opens the Pokémon under the finger.
+			const details = g && g.main && g.main.pokemonScene;
+			const wasOpen = !!(details && details.isOpen);
 			canvas.dispatchEvent(mouse('mousemove', x, y));
 			lastSyntheticContextMenu = now();
 			canvas.dispatchEvent(mouse('contextmenu', x, y, { button: 2, buttons: 2 }));
+			lp.openedDetails = !wasOpen && !!(details && details.isOpen);
+			if (lp.openedDetails) haptic();
 			suppressClickUntil = now() + 1500;
 			return;
 		}
@@ -270,7 +275,23 @@
 
 	window.addEventListener('pointermove', (e) => {
 		if (!lp || e.pointerType !== 'touch' || !e.isPrimary) return;
-		if (Math.abs(e.clientX - lp.x) > MOVE_TOLERANCE || Math.abs(e.clientY - lp.y) > MOVE_TOLERANCE) cancelLongPress();
+		if (Math.abs(e.clientX - lp.x) <= MOVE_TOLERANCE && Math.abs(e.clientY - lp.y) <= MOVE_TOLERANCE) return;
+		if (lp.fired) {
+			// Held, then started dragging: that's a drag (e.g. moving a Pokémon), so undo
+			// what the long-press opened instead of leaving it on top of the drag.
+			const g = window.__pokeGame;
+			const details = g && g.main && g.main.pokemonScene;
+			if (lp.openedDetails && details && details.isOpen) {
+				try { details.close(); } catch (_) {}
+			}
+			if (tooltipFromLongPress && window.__pokeTooltip) {
+				window.__pokeTooltip.hide();
+				tooltipFromLongPress = false;
+			}
+			lp.openedDetails = false;
+			return;
+		}
+		cancelLongPress();
 	}, true);
 
 	const onTouchEnd = (e) => {
