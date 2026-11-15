@@ -175,7 +175,16 @@ export class Init {
             setTimeout(complete, 10000);
         };
 
-        images.forEach(loadImage);
+        {
+            // iPhone build: load images in slices so the app stays responsive
+            let next = 0;
+            const slice = () => {
+                const end = Math.min(images.length, next + 24);
+                for (; next < end; next++) loadImage(images[next]);
+                if (next < images.length) setTimeout(slice, 8);
+            };
+            slice();
+        }
         sounds.forEach(loadSound);
     }
 

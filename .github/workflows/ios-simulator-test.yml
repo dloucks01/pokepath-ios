@@ -87,7 +87,7 @@ jobs:
           xcrun simctl install "$UDID" ios/App/build/Build/Products/Debug-iphonesimulator/App.app
           # --console-pty keeps the app's stdout (Capacitor prints JS console there)
           xcrun simctl launch --console-pty --terminate-running-process "$UDID" local.pokepath.td > sim-results/app-console.log 2>&1 &
-          python3 native/sim_driver.py "$UDID" sim-results || true
+          python3 native/sim_driver.py "$UDID" sim-results sim-results/app-console.log || true
           sleep 2
           grep -E "\[pp\]|ERROR|error" sim-results/app-console.log | tail -n 120 || true
 

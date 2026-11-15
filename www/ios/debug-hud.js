@@ -119,17 +119,63 @@
 		workerStatus = 'throws: ' + err.message;
 	}
 
+	// Startup phases, to see where time goes.
+	let phase = 'boot';
+	const mark = (name) => {
+		phase = name;
+		if (window.PP_DEBUG) consoleLog(`[pp] PHASE ${name} at t=${((performance.now() - t0) / 1000).toFixed(2)}s`);
+	};
+	document.addEventListener('DOMContentLoaded', () => mark('dom-ready'));
+	window.addEventListener('load', () => mark('window-load'));
+	const phaseWatch = new MutationObserver(() => {
+		if (phase === 'dom-ready' || phase === 'window-load' || phase === 'boot') {
+			if (document.querySelector('.loading-bar')) mark('loading-screen');
+		}
+		if (phase === 'loading-screen' && !document.querySelector('.init-scene')) mark('loading-done');
+		if (phase === 'loading-done' && window.__pokeGame) { mark('game-running'); phaseWatch.disconnect(); }
+	});
+	phaseWatch.observe(document.documentElement, { childList: true, subtree: true });
+	window.__ppMark = mark;
+
 	// How late a 100 ms timer fires = how long the page was too busy to react to touches.
 	const lagWindow = [];
 	let expected = performance.now() + 100;
 	setInterval(() => {
 		const t = performance.now();
-		lagWindow.push(Math.max(0, t - expected));
+		const lag = Math.max(0, t - expected);
+		if (lag > 250 && window.PP_DEBUG) consoleLog(`[pp] BLOCKED ${Math.round(lag)}ms ending at t=${((t - t0) / 1000).toFixed(1)}s (phase: ${phase})`);
+		lagWindow.push(lag);
 		if (lagWindow.length > 50) lagWindow.shift();
 		expected = t + 100;
 	}, 100);
 
 	setInterval(render, 1000);
+
+	// Where the main buttons are (CSS px = iOS points), for the Simulator test driver.
+	let lastTargets = '';
+	setInterval(() => {
+		if (!window.PP_DEBUG) return;
+		const out = {};
+		const add = (name, el) => {
+			if (!el) return;
+			const r = el.getBoundingClientRect();
+			if (r.width > 0 && r.height > 0) out[name] = [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)];
+		};
+		const leaves = [...document.querySelectorAll('#screen div')].filter((e) => e.children.length === 0 && e.getClientRects().length);
+		add('start', document.querySelector('.new-game-start-button'));
+		add('next', leaves.find((e) => e.textContent.trim() === 'NEXT'));
+		add('end', leaves.find((e) => e.textContent.trim() === 'END'));
+		add('nextWave', document.querySelector('.ui-next-wave'));
+		add('pause', document.querySelector('.ui-pause-wave'));
+		add('teamSlot1', document.querySelector('.ui-pokemon'));
+		add('canvas', document.querySelector('canvas'));
+		add('menuDock', document.querySelector('#pp-touch-dock button'));
+		const json = JSON.stringify(out);
+		if (json !== lastTargets) {
+			lastTargets = json;
+			consoleLog('[pp] TARGETS ' + json);
+		}
+	}, 500);
 
 	// Periodic one-line status for test logs.
 	setInterval(() => {

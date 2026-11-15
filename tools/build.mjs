@@ -253,6 +253,22 @@ function patchInitPreload() {
 	// decodes them itself, so skip that (also makes loading faster).
 	patchFile('src/js/game/Init.js', (src) =>
 		src.replace('const sounds = Array.isArray(assets.sounds) ? assets.sounds : [];', 'const sounds = []; // iPhone build: sounds are decoded by the Web Audio engine'));
+
+	// It also started all ~3,500 image loads in one synchronous loop. In the iOS app
+	// every load goes through Capacitor's file handler, so that loop froze the app for
+	// many seconds (18 s in the Simulator) - taps during it were delayed or lost.
+	// Start them in small slices instead, yielding to the UI between slices.
+	patchFile('src/js/game/Init.js', (src) =>
+		src.replace('images.forEach(loadImage);', `{
+            // iPhone build: load images in slices so the app stays responsive
+            let next = 0;
+            const slice = () => {
+                const end = Math.min(images.length, next + 24);
+                for (; next < end; next++) loadImage(images[next]);
+                if (next < images.length) setTimeout(slice, 8);
+            };
+            slice();
+        }`));
 }
 
 function patchHoverCss() {
