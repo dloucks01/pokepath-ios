@@ -1,0 +1,6 @@
+# Keep shell/Swift/YAML with LF so they run on the macOS build machine.
+*.sh text eol=lf
+*.swift text eol=lf
+*.yml text eol=lf
+# The extracted game is stored byte-for-byte.
+www/** -text

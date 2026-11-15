@@ -1,0 +1,12 @@
+{
+  "appId": "local.pokepath.td",
+  "appName": "PokéPath TD",
+  "webDir": "www",
+  "backgroundColor": "#111111",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "backgroundColor": "#111111"
+  }
+}

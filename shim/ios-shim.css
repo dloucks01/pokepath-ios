@@ -1,0 +1,116 @@
+/* PokéPath TD - iPhone layout / touch tweaks (injected by tools/build.mjs from shim/) */
+
+html, body {
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	overscroll-behavior: none;
+	background: #111;
+	touch-action: manipulation;
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+body {
+	position: fixed;
+	inset: 0;
+}
+
+* {
+	-webkit-tap-highlight-color: transparent;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+	-webkit-user-select: text;
+	user-select: text;
+	-webkit-touch-callout: default;
+}
+
+/* Team sprites start drags on pointerdown; stop iOS from turning that into a pan. */
+.ui-pokemon, .ui-pokemon-sprite {
+	touch-action: none;
+}
+
+/* ---- touch dock (Esc / ranges) ------------------------------------------ */
+#pp-touch-dock {
+	position: fixed;
+	z-index: 2147483000;
+	left: max(6px, calc(env(safe-area-inset-left) - 52px));
+	bottom: max(10px, env(safe-area-inset-bottom));
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	opacity: 0.55;
+}
+
+#pp-touch-dock button {
+	width: 42px;
+	height: 42px;
+	border-radius: 10px;
+	border: 2px solid #000;
+	background: #3d3d3f;
+	color: #d4d4d4;
+	font: 20px/1 sans-serif;
+	padding: 0;
+	box-shadow: inset 0 -3px 0 #2a2a2b, inset 0 2px 0 #5a5a5c;
+	touch-action: manipulation;
+}
+
+#pp-touch-dock button:active {
+	background: #a33635;
+}
+
+/* Only show the dock on touch screens. */
+@media (hover: hover) and (pointer: fine) {
+	#pp-touch-dock { display: none; }
+}
+
+/* ---- portrait warning ---------------------------------------------------- */
+#pp-rotate {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 2147483600;
+	background: #111214;
+	color: #d4d4d4;
+	font: 16px/1.5 "PressStart2P", sans-serif;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.pp-rotate-icon {
+	font-size: 56px;
+	margin-bottom: 16px;
+}
+
+@media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
+	#pp-rotate { display: flex; }
+}
+
+/* ---- offline download badge --------------------------------------------- */
+#pp-offline-badge {
+	display: none;
+	position: fixed;
+	z-index: 2147483500;
+	top: max(6px, env(safe-area-inset-top));
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 6px 12px;
+	border: 2px solid #000;
+	border-radius: 8px;
+	background: rgba(42, 43, 45, 0.92);
+	color: #eae174;
+	font: 10px/1.4 "PressStart2P", sans-serif;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+#pp-offline-badge.pp-done {
+	color: #70ac4c;
+}

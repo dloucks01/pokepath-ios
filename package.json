@@ -1,0 +1,21 @@
+{
+  "name": "pokepath-td-ios",
+  "version": "1.7.0",
+  "private": true,
+  "description": "Repackages the PokéPath TD Windows (Electron) build as an offline iPhone web app and a Capacitor iOS app.",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "serve": "node tools/serve.mjs",
+    "cap:sync": "cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.6.2",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2",
+    "@electron/asar": "4.3.2"
+  }
+}

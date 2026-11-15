@@ -1,0 +1,85 @@
+# Builds the PokéPath TD iPhone app (.ipa, unsigned) on a GitHub-hosted Mac and
+# publishes it as the "latest" GitHub Release. Install it from Windows with
+# Sideloadly, which signs it with your Apple ID. See README.md.
+name: Build iOS app (.ipa)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'www/**'
+      - 'native/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ios-ipa.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Capacitor
+        run: npm ci
+
+      - name: Create the Xcode project
+        run: |
+          if [ ! -d ios/App ]; then
+            npx cap add ios --packagemanager SPM
+          fi
+
+      - name: Copy the game into the app
+        run: npx cap sync ios
+
+      - name: Configure (landscape, fullscreen, icon, launch screen)
+        run: bash native/configure-ios.sh
+
+      - name: Build (unsigned)
+        working-directory: ios/App
+        run: |
+          set -o pipefail
+          VERSION=$(node -p "require('../../package.json').version")
+          if [ -d App.xcworkspace ]; then TARGET=(-workspace App.xcworkspace); else TARGET=(-project App.xcodeproj); fi
+          xcodebuild "${TARGET[@]}" -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee xcodebuild.log | grep -E "error:|warning: .*GameViewController|BUILD (SUCCEEDED|FAILED)" || true
+          APP=build/Build/Products/Release-iphoneos/App.app
+          if [ ! -d "$APP" ]; then tail -n 80 xcodebuild.log; exit 1; fi
+          rm -rf Payload && mkdir Payload && cp -R "$APP" Payload/
+          zip -qry "$GITHUB_WORKSPACE/PokePathTD.ipa" Payload
+          ls -lh "$GITHUB_WORKSPACE/PokePathTD.ipa"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PokePathTD-ipa
+          path: PokePathTD.ipa
+          retention-days: 30
+
+      - name: Publish as the "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest PokePathTD.ipa \
+            --title "PokéPath TD for iPhone v$VERSION (build $GITHUB_RUN_NUMBER)" \
+            --notes "Unsigned iPhone app. Install it with Sideloadly - see the README." \
+            --target "$GITHUB_SHA" --latest
