@@ -90,7 +90,7 @@ This serves the game at http://localhost:8080, with the same touch layer the iPh
 | `tools/build.mjs` | Pulls the game out of the Windows installer into `www/` and patches it for iPhone |
 | `shim/ios-shim.js`, `shim/ios-shim.css` | Touch controls, audio fixes, auto-pause, haptics, layout |
 | `native/configure-ios.sh` | Sets up the Xcode project: landscape lock, fullscreen, icon, launch screen, `GameViewController` |
-| `native/GameViewController.swift` | Hides the status bar and home indicator, defers edge gestures, no bounce |
+| `native/GameViewController.swift` | Defers edge gestures, no bounce, dark background (status bar and home indicator are hidden via `SystemBars` in `capacitor.config.json`) |
 | `capacitor.config.json` | [Capacitor](https://capacitorjs.com) app settings (bundle id `local.pokepath.td`) |
 | `.github/workflows/ios-ipa.yml` | Cloud Mac build: unsigned `.ipa`, published as the **latest** release |
 | `www/` | The patched game, bundled into the app |

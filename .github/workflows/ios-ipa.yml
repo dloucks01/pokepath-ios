@@ -55,14 +55,23 @@ jobs:
           set -o pipefail
           VERSION=$(node -p "require('../../package.json').version")
           if [ -d App.xcworkspace ]; then TARGET=(-workspace App.xcworkspace); else TARGET=(-project App.xcodeproj); fi
-          xcodebuild "${TARGET[@]}" -scheme App -configuration Release \
+          if ! xcodebuild "${TARGET[@]}" -scheme App -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build 2>&1 | tee xcodebuild.log | grep -E "error:|warning: .*GameViewController|BUILD (SUCCEEDED|FAILED)" || true
+            build > xcodebuild.log 2>&1; then
+            echo "::error::xcodebuild failed"
+            grep -E "error:" xcodebuild.log | sort -u | head -40
+            tail -n 60 xcodebuild.log
+            exit 1
+          fi
+          grep -E "BUILD SUCCEEDED" xcodebuild.log
           APP=build/Build/Products/Release-iphoneos/App.app
-          if [ ! -d "$APP" ]; then tail -n 80 xcodebuild.log; exit 1; fi
+          # A real app bundle has its executable and Info.plist; refuse to ship anything less.
+          for F in "$APP/App" "$APP/Info.plist" "$APP/public/index.html" "$APP/public/ios/ios-shim.js"; do
+            [ -e "$F" ] || { echo "::error::missing $F in the app bundle"; ls -la "$APP"; exit 1; }
+          done
           rm -rf Payload && mkdir Payload && cp -R "$APP" Payload/
           zip -qry "$GITHUB_WORKSPACE/PokePathTD.ipa" Payload
           ls -lh "$GITHUB_WORKSPACE/PokePathTD.ipa"

@@ -4,9 +4,8 @@
 // storyboard's root view controller in place of CAPBridgeViewController.
 class GameViewController: CAPBridgeViewController {
 
-    // Hide the status bar and auto-hide the home indicator while playing.
-    override var prefersStatusBarHidden: Bool { true }
-    override var prefersHomeIndicatorAutoHidden: Bool { true }
+    // The status bar and home indicator are hidden by Capacitor's SystemBars
+    // plugin ("plugins.SystemBars.hidden" in capacitor.config.json).
 
     // Edge swipes need a second swipe, so dragging Pokémon near the screen
     // edges doesn't accidentally open Control Center / go home.
@@ -20,8 +19,6 @@ class GameViewController: CAPBridgeViewController {
         webView?.scrollView.backgroundColor = background
         webView?.scrollView.bounces = false
         webView?.scrollView.contentInsetAdjustmentBehavior = .never
-        setNeedsUpdateOfHomeIndicatorAutoHidden()
         setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
-        setNeedsStatusBarAppearanceUpdate()
     }
 }

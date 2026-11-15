@@ -8,5 +8,11 @@
     "scrollEnabled": false,
     "allowsLinkPreview": false,
     "backgroundColor": "#111111"
+  },
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "style": "DARK"
+    }
   }
 }
