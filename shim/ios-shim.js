@@ -116,9 +116,14 @@
 		window.Audio = PatchedAudio;
 	}
 
+	window.__ppAudioState = () => (actx ? actx.state : 'none');
+
 	let unlockedOnce = false;
 	const unlockAudio = () => {
 		resumeCtx();
+		// The native app's web view lets media play without a gesture, so it only
+		// needs the AudioContext resumed - not a play()/pause() on every element.
+		if (isNative) { pendingUnlock.clear(); return; }
 		for (const el of pendingUnlock) {
 			pendingUnlock.delete(el);
 			if (!el.paused || !el.src) continue;

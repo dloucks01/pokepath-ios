@@ -1,0 +1,116 @@
+/*
+ * PokéPath TD - on-device diagnostics panel.
+ * Loaded before everything else so it also catches startup errors.
+ *
+ * Shows: JavaScript errors, every touch / pointer / mouse / click event with what was
+ * under the finger, screen + scaling info, audio state, and whether Web Workers start.
+ * Turn on: built with `node tools/build.mjs --debug-hud`, or a 3-finger tap anywhere.
+ * The panel never takes touches itself (pointer-events: none).
+ */
+(() => {
+	'use strict';
+	const lines = [];
+	const errors = [];
+	const counts = { touchstart: 0, touchend: 0, pointerdown: 0, pointerup: 0, mousedown: 0, click: 0 };
+	let panel = null;
+	let enabled = !!window.PP_DEBUG;
+
+	const describe = (el) => {
+		if (!el || el === window || el === document) return String(el && (el.nodeName || el));
+		const id = el.id ? '#' + el.id : '';
+		const cls = typeof el.className === 'string' && el.className ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+		return (el.tagName || el.nodeName).toLowerCase() + id + cls;
+	};
+
+	const render = () => {
+		if (!enabled) return;
+		if (!panel) {
+			if (!document.body) return;
+			panel = document.createElement('pre');
+			panel.id = 'pp-debug-hud';
+			panel.style.cssText = [
+				'position:fixed', 'z-index:2147483647', 'left:4px', 'top:4px', 'max-width:60vw', 'max-height:92vh',
+				'overflow:hidden', 'margin:0', 'padding:4px 6px', 'background:rgba(0,0,0,.78)', 'color:#9f9',
+				'font:10px/1.25 Menlo,monospace', 'white-space:pre-wrap', 'pointer-events:none', 'border-radius:4px'
+			].join(';');
+			document.body.appendChild(panel);
+		}
+		panel.style.display = 'block';
+		const root = document.getElementById('screen-root');
+		const cx = innerWidth / 2, cy = innerHeight / 2;
+		const info = [
+			`PokéPath debug  ${location.protocol}//${location.host}  native=${!!window.Capacitor}`,
+			`view ${innerWidth}x${innerHeight} dpr=${devicePixelRatio} orient=${matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape'} scale=${root ? root.style.transform : '-'}`,
+			`center hit: ${describe(document.elementFromPoint(cx, cy))}`,
+			`audio=${window.__ppAudioState ? window.__ppAudioState() : '?'}  worker=${workerStatus}  game=${!!window.__pokeGame}`,
+			`counts ${Object.entries(counts).map(([k, v]) => k + ':' + v).join(' ')}`
+		];
+		const errText = errors.slice(-6).map((e) => '✖ ' + e);
+		panel.textContent = [...info, ...errText, '—', ...lines.slice(-12)].join('\n');
+		panel.style.color = errors.length ? '#fbb' : '#9f9';
+	};
+
+	const log = (s) => {
+		lines.push(s);
+		if (lines.length > 40) lines.shift();
+		render();
+	};
+
+	// ---- errors (from the very start) ----
+	window.addEventListener('error', (e) => {
+		errors.push(`${e.message} @ ${(e.filename || '').split('/').slice(-2).join('/')}:${e.lineno}`);
+		render();
+	}, true);
+	window.addEventListener('unhandledrejection', (e) => {
+		const r = e.reason;
+		errors.push('promise: ' + (r && (r.message || r.name) || String(r)));
+		render();
+	});
+	const origError = console.error;
+	console.error = function (...args) {
+		errors.push('console: ' + args.map((a) => (a && a.message) || String(a)).join(' ').slice(0, 160));
+		render();
+		return origError.apply(this, args);
+	};
+
+	// ---- input events ----
+	const t0 = performance.now();
+	const onEvent = (e) => {
+		if (e.type in counts) counts[e.type]++;
+		if (!enabled) return;
+		const p = e.changedTouches ? e.changedTouches[0] : e;
+		const x = Math.round(p.clientX), y = Math.round(p.clientY);
+		const under = document.elementFromPoint(x, y);
+		const flags = [e.defaultPrevented ? 'PREVENTED' : '', e.isTrusted ? '' : 'synthetic', e.pointerType || ''].filter(Boolean).join(',');
+		log(`${((performance.now() - t0) / 1000).toFixed(1)}s ${e.type} (${x},${y}) tgt=${describe(e.target)}${under !== e.target ? ' under=' + describe(under) : ''} ${flags}`);
+	};
+	for (const t of Object.keys(counts)) {
+		window.addEventListener(t, onEvent, { capture: true, passive: true });
+		// bubble-phase too, to see whether something stops propagation along the way
+		window.addEventListener(t, (e) => { if (enabled && t === 'click') log(`   click reached window (bubble)`); }, { passive: true });
+	}
+
+	// 3-finger tap toggles the panel.
+	window.addEventListener('touchstart', (e) => {
+		if (e.touches.length === 3) {
+			enabled = !enabled;
+			if (panel) panel.style.display = enabled ? 'block' : 'none';
+			render();
+		}
+	}, { capture: true, passive: true });
+
+	// ---- can a blob Web Worker start here? (the game's loop uses one) ----
+	let workerStatus = 'testing';
+	try {
+		const url = URL.createObjectURL(new Blob(['postMessage("ok")'], { type: 'application/javascript' }));
+		const w = new Worker(url);
+		const timer = setTimeout(() => { workerStatus = 'no reply'; render(); }, 3000);
+		w.onmessage = () => { clearTimeout(timer); workerStatus = 'ok'; w.terminate(); render(); };
+		w.onerror = (e) => { clearTimeout(timer); workerStatus = 'error: ' + (e.message || 'failed'); render(); };
+	} catch (err) {
+		workerStatus = 'throws: ' + err.message;
+	}
+
+	setInterval(render, 1000);
+	document.addEventListener('DOMContentLoaded', render);
+})();

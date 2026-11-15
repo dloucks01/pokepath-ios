@@ -162,6 +162,8 @@ function patchIndex() {
 			'<link rel="manifest" href="./manifest.webmanifest">',
 			'<link rel="apple-touch-icon" href="./ios/icons/icon-180.png">',
 			'<link rel="stylesheet" href="./ios/ios-shim.css">',
+			...(DEBUG_HUD ? ['<script>window.PP_DEBUG = 1;</script>'] : []),
+			'<script src="./ios/debug-hud.js"></script>',
 			'<script src="./ios/ios-shim.js"></script>'
 		].map((l) => '    ' + l).join('\n');
 		return html.replace(/<\/head>/i, `${head}\n</head>`);
@@ -310,9 +312,13 @@ function writeServiceWorker() {
 }
 
 /* ------------------------------------------------------------------ main */
-const input = process.argv[2] ? path.resolve(process.argv[2]) : findDefaultInput();
+const args = process.argv.slice(2);
+const DEBUG_HUD = args.includes('--debug-hud') || process.env.PP_DEBUG_HUD === '1';
+const positional = args.filter((a) => !a.startsWith('--'));
+const input = positional[0] ? path.resolve(positional[0]) : findDefaultInput();
 if (!input || !fs.existsSync(input)) die('Pass the PokéPath TD installer (.exe/.zip) or game folder as an argument.');
 log('Input:', input);
+if (DEBUG_HUD) log('Diagnostics panel: ON (always visible)');
 
 fs.mkdirSync(TMP, { recursive: true });
 const gameDir = resolveGameDir(input);
@@ -325,7 +331,7 @@ patchTooltip();
 patchGame();
 checkAssumptions();
 fs.mkdirSync(path.join(WWW, 'ios'), { recursive: true });
-for (const f of ['ios-shim.js', 'ios-shim.css']) fs.copyFileSync(path.join(SHIM, f), path.join(WWW, 'ios', f));
+for (const f of ['ios-shim.js', 'ios-shim.css', 'debug-hud.js']) fs.copyFileSync(path.join(SHIM, f), path.join(WWW, 'ios', f));
 makeIcons();
 makeSplash();
 writeManifest();
