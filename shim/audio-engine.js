@@ -36,7 +36,44 @@ function context() {
 	}
 	window.__ppAudioState = () => ctx.state;
 	applyVolume();
+	if (window.PP_DEBUG) installMeters();
 	return ctx;
+}
+
+/* ------------------------------------------------------------------ test meters
+ * Only with the diagnostics panel's test mode (window.PP_DEBUG): measures the peak
+ * signal level each category actually produced, so an automated test can check
+ * that sound plays without anyone listening. */
+const started = { ui: 0, effect: 0, music: 0 };
+function installMeters() {
+	const peaks = { ui: 0, effect: 0, music: 0 };
+	const analysers = {};
+	for (const name of Object.keys(peaks)) {
+		const a = ctx.createAnalyser();
+		a.fftSize = 512;
+		gains[name].connect(a);
+		analysers[name] = { node: a, buf: new Float32Array(a.fftSize) };
+	}
+	setInterval(() => {
+		for (const [name, { node, buf }] of Object.entries(analysers)) {
+			node.getFloatTimeDomainData(buf);
+			let sum = 0;
+			for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+			peaks[name] = Math.max(peaks[name], Math.sqrt(sum / buf.length));
+		}
+	}, 40);
+	window.__ppAudioDebug = () => {
+		const out = {
+			state: ctx.state,
+			time: Math.round(ctx.currentTime),
+			music: current ? current.name : null,
+			started: { ...started },
+			peak: Object.fromEntries(Object.entries(peaks).map(([k, v]) => [k, Math.round(v * 1000) / 1000])),
+			gain: Object.fromEntries(Object.entries(gains).map(([k, g]) => [k, Math.round(g.gain.value * 1000) / 1000]))
+		};
+		for (const k of Object.keys(peaks)) peaks[k] = 0;
+		return out;
+	};
 }
 
 const resume = () => {
@@ -147,6 +184,7 @@ function start(buffer, origin, key, volume = 1) {
 	src.onended = () => { if (playing.get(key) === src) playing.delete(key); };
 	src.start(0);
 	playing.set(key, src);
+	started[origin in started ? origin : 'effect']++;
 }
 
 export function playSound(sound, origin) {
@@ -219,6 +257,7 @@ export function playMusic(trackName) {
 		src.connect(gain);
 		gain.connect(gains.music);
 		src.start(0);
+		started.music++;
 		current = { name: trackName, src, gain };
 		trimMusicCache(url);
 	}).catch(() => {

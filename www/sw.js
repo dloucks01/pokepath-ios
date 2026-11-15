@@ -9,7 +9,7 @@
  * - On a new build, unchanged files are copied from the previous cache instead of being
  *   downloaded again; the old cache is deleted once the new one is complete.
  */
-const VERSION = '427da4f8bd15';
+const VERSION = '72ed82c2578f';
 const PREFIX = 'pokepath-';
 const CACHE = PREFIX + VERSION;
 const MANIFEST_KEY = '__pp_manifest__';

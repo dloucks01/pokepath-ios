@@ -114,3 +114,18 @@ input, textarea, [contenteditable="true"] {
 #pp-offline-badge.pp-done {
 	color: #70ac4c;
 }
+
+/* ---- bigger touch targets for the team slot buttons ----------------------
+ * The four buttons under each team Pokémon are only ~16x14 pt on a phone.
+ * Extend their invisible hit area (into the gaps and the space above) without
+ * changing how they look. */
+@media (pointer: coarse) {
+	.ui-pokemon-button::after {
+		content: '';
+		position: absolute;
+		left: -3px;
+		right: -3px;
+		top: -12px;
+		bottom: -4px;
+	}
+}

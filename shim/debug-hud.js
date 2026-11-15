@@ -168,8 +168,40 @@
 		add('nextWave', document.querySelector('.ui-next-wave'));
 		add('pause', document.querySelector('.ui-pause-wave'));
 		add('teamSlot1', document.querySelector('.ui-pokemon'));
+		add('sprite1', document.querySelector('.ui-pokemon .ui-pokemon-sprite'));
+		add('deploy1', document.querySelector('.ui-pokemon .ui-pokemon-button')); // red "deploy" button of slot 1
 		add('canvas', document.querySelector('canvas'));
 		add('menuDock', document.querySelector('#pp-touch-dock button'));
+		add('profileIcon', document.querySelector('.ui-section'));
+		add('achievement', [...document.querySelectorAll('.profile-scene-achievement')].find((e) => e.getClientRects().length));
+
+		// Map tiles (canvas coordinates) -> screen points.
+		const g = window.__pokeGame;
+		const main = g && g.main;
+		const canvas = document.querySelector('canvas');
+		if (main && main.area && canvas && canvas.offsetWidth) {
+			const r = canvas.getBoundingClientRect();
+			const k = r.width / canvas.offsetWidth;
+			const at = (tile) => [Math.round(r.left + (tile.position.x + tile.size / 2) * k), Math.round(r.top + (tile.position.y + tile.size / 2) * k)];
+			const tiles = main.area.placementTiles || [];
+			const first = main.team && main.team.pokemon && main.team.pokemon[0];
+			const free = tiles.find((t) => !t.tower && !t.passenger && first &&
+				(typeof t.canPlacePokemonHere === 'function' ? t.canPlacePokemonHere(first) : (first.tiles || []).includes(t.land)));
+			if (free) out.freeTile = at(free);
+			const placed = tiles.find((t) => t.tower);
+			if (placed) out.tower = at(placed);
+			const tip = window.__pokeTooltip && window.__pokeTooltip.tooltip;
+			out.state = {
+				towers: (main.area.towers || []).length,
+				deploying: !!g.deployingUnit,
+				details: !!(main.pokemonScene && main.pokemonScene.isOpen),
+				profile: !!(main.profileScene && main.profileScene.isOpen),
+				menu: !!(main.menuScene && main.menuScene.isOpen),
+				tooltip: !!(tip && tip.style.display === 'block'),
+				wave: !!main.area.waveActive,
+				paused: !!g.stopped
+			};
+		}
 		const json = JSON.stringify(out);
 		if (json !== lastTargets) {
 			lastTargets = json;
@@ -181,7 +213,7 @@
 	setInterval(() => {
 		if (!window.PP_DEBUG) return;
 		const root = document.getElementById('screen-root');
-		consoleLog(`[pp] STATUS t=${((performance.now() - t0) / 1000).toFixed(0)}s view=${innerWidth}x${innerHeight} scale=${root ? root.style.transform : '-'} audio=${window.__ppAudioState ? window.__ppAudioState() : '?'} worker=${workerStatus} game=${!!window.__pokeGame} wave=${!!(window.__pokeGame && window.__pokeGame.main && window.__pokeGame.main.area && window.__pokeGame.main.area.waveActive)} lagMax5s=${Math.round(Math.max(...lagWindow, 0))}ms errors=${errors.length} counts=${JSON.stringify(counts)}`);
+		consoleLog(`[pp] STATUS t=${((performance.now() - t0) / 1000).toFixed(0)}s view=${innerWidth}x${innerHeight} scale=${root ? root.style.transform : '-'} audio=${window.__ppAudioState ? window.__ppAudioState() : '?'} worker=${workerStatus} game=${!!window.__pokeGame} wave=${!!(window.__pokeGame && window.__pokeGame.main && window.__pokeGame.main.area && window.__pokeGame.main.area.waveActive)} lagMax5s=${Math.round(Math.max(...lagWindow, 0))}ms errors=${errors.length} sound=${window.__ppAudioDebug ? JSON.stringify(window.__ppAudioDebug()) : '-'} counts=${JSON.stringify(counts)}`);
 	}, 5000);
 	document.addEventListener('DOMContentLoaded', render);
 })();

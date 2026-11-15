@@ -132,18 +132,58 @@ def tap(name, hold=None, settle=1.5):
     return True
 
 
+RESULTS = []
+
+
+def check(name, ok, detail=""):
+    RESULTS.append(f"{'PASS' if ok else 'FAIL'}  {name}{('  - ' + detail) if detail else ''}")
+    note(f"CHECK {name}: {'PASS' if ok else 'FAIL'} {detail}")
+
+
+def state():
+    return targets().get("state", {})
+
+
+def wait_state(key, value, timeout=6):
+    end = time.time() + timeout
+    while time.time() < end:
+        if state().get(key) == value:
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def sound_lines():
+    out = []
+    for line in console_lines():
+        if "[pp] STATUS" in line and "sound={" in line:
+            try:
+                out.append(json.loads(line.split("sound=", 1)[1]))
+            except json.JSONDecodeError:
+                pass
+    return out
+
+
+def tap_point(point, hold=None, why=""):
+    px, py = MAP(*point)
+    before = len(console_lines())
+    raw_tap(px, py, hold)
+    time.sleep(1.2)
+    ev = [l.split("[pp] ", 1)[1] for l in console_lines()[before:] if "[pp] " in l and ("down" in l or "click" in l)]
+    note(f"TAP {why} page{tuple(point)}{' hold ' + str(hold) + 's' if hold else ''}: " + " | ".join(ev[:5]))
+
+
 def main():
     note("waiting for the game to load")
+    t_launch = time.time()
     if not wait_target("start", 150):
         note("START never appeared")
+    check("game loads to the profile screen", "start" in targets(), f"{time.time() - t_launch:.0f}s after launch")
     shot("loaded")
     calibrate()
-    shot("after-calibration")
 
     tap("start", settle=2)
-    shot("after-start")
-    note(f"tutorial NEXT visible: {bool(wait_target('next', 10))}")
-
+    check("START opens the tutorial", bool(wait_target("next", 10)))
     for _ in range(10):
         if "next" in targets():
             tap("next", settle=1.0)
@@ -152,36 +192,89 @@ def main():
             break
         else:
             break
+    check("tutorial closes", "next" not in targets() and "end" not in targets())
     shot("after-tutorial")
 
-    # Deploy the first team Pokémon onto the map, then start a wave.
-    tap("teamSlot1", settle=1.0)
-    canvas = targets().get("canvas")
-    if canvas:
-        before = len(console_lines())
-        px, py = MAP(canvas[0] - 120, canvas[1] - 100)
-        raw_tap(px, py)
-        time.sleep(1.0)
-        note("placement tap: " + " | ".join(l.split("[pp] ", 1)[1] for l in console_lines()[before:] if "[pp] " in l and "click" in l))
-    shot("after-place")
+    # --- Place the first team Pokémon on a valid tile (tap slot, then tap tile).
+    tap("deploy1", settle=1.0)  # the small red deploy button in the team slot
+    check("red deploy button starts placing", wait_state("deploying", True, 3))
+    tap("menuDock", settle=1.0)  # ☰ = Esc cancels placing
+    check("☰ button cancels placing", wait_state("deploying", False, 3))
+    tap("sprite1", settle=1.0)  # touch shortcut: tap the Pokémon's picture
+    check("tapping the team Pokémon's picture starts placing", wait_state("deploying", True, 3))
+    tile = targets().get("freeTile")
+    if tile:
+        tap_point(tile, why="free tile")
+        check("tapping a valid tile places the Pokémon", wait_state("towers", 1, 4), f"state={state()}")
+    else:
+        check("tapping a valid tile places the Pokémon", False, "no free tile reported")
+    shot("placed")
 
-    tap("nextWave", settle=2)
-    time.sleep(10)
-    shot("wave-running")
+    # --- Long-press the placed Pokémon: details window, and it must not get picked up/moved.
+    tower = targets().get("tower")
+    if tower:
+        tap_point(tower, hold=0.9, why="long-press tower")
+        ok = wait_state("details", True, 4)
+        check("long-press on a placed Pokémon opens its details", ok, f"state={state()}")
+        check("long-press doesn't move or remove the Pokémon", state().get("towers") == 1 and targets().get("tower") == tower)
+        shot("details")
+        tap("menuDock", settle=1.5)
+        check("☰ button closes the details window", wait_state("details", False, 4))
+    else:
+        check("long-press on a placed Pokémon opens its details", False, "no tower on the map")
 
-    # Long-press the map centre (right-click equivalent).
-    if canvas:
-        px, py = MAP(*canvas)
+    # --- Drag the placed Pokémon to another free tile.
+    tower = targets().get("tower")
+    dest = targets().get("freeTile")
+    if tower and dest:
+        a, b = MAP(*tower), MAP(*dest)
         before = len(console_lines())
-        raw_tap(px, py, hold=0.8)
+        run("idb", "ui", "swipe", "--udid", UDID, "--duration", "0.8", "--delta", "8",
+            f"{a[0]:.0f}", f"{a[1]:.0f}", f"{b[0]:.0f}", f"{b[1]:.0f}")
         time.sleep(1.5)
-        note("long-press map: " + " | ".join(l.split("[pp] ", 1)[1] for l in console_lines()[before:] if "[pp] " in l)[:600])
-        shot("after-long-press")
-        tap("menuDock", settle=1.5)  # ☰ = Esc: closes the details window
-        shot("after-menu-button")
+        moved_to = targets().get("tower")
+        note("drag events: " + " | ".join(l.split("[pp] ", 1)[1] for l in console_lines()[before:] if "[pp] " in l and ("down" in l or "up" in l))[:400])
+        check("dragging a placed Pokémon moves it", state().get("towers") == 1 and moved_to == dest, f"from {tower} to {dest}, now at {moved_to}")
+        shot("dragged")
 
-    time.sleep(20)
-    shot("wave-later")
+    # --- Tooltips: Profile screen, long-press an achievement.
+    tap("profileIcon", settle=1.5)
+    check("profile icon opens Profile", wait_state("profile", True, 4))
+    ach = wait_target("achievement", 5)
+    if ach:
+        tap_point(ach, why="quick tap achievement")
+        check("a quick tap does NOT show a tooltip", not state().get("tooltip"))
+        tap_point(ach, hold=0.9, why="long-press achievement")
+        check("long-press shows the tooltip", wait_state("tooltip", True, 3))
+        shot("tooltip")
+        tap_point(ach, why="tap to dismiss")
+        check("next touch hides the tooltip", wait_state("tooltip", False, 3))
+    else:
+        check("long-press shows the tooltip", False, "no achievement on screen")
+    tap("menuDock", settle=1.5)
+    check("☰ button closes Profile", wait_state("profile", False, 4))
+
+    # --- Wave + sound.
+    tap("nextWave", settle=2)
+    check("NEXT WAVE starts a wave", wait_state("wave", True, 5))
+    time.sleep(15)
+    shot("wave")
+    sounds = sound_lines()
+    last = sounds[-1] if sounds else {}
+    peak = {k: max((s.get("peak", {}).get(k, 0) for s in sounds), default=0) for k in ("ui", "effect", "music")}
+    note(f"sound summary: last={last} peaks={peak}")
+    check("audio engine running", last.get("state") == "running", f"state={last.get('state')} time={last.get('time')}s")
+    check("UI sounds produce audio signal", peak["ui"] > 0.001, f"peak={peak['ui']} started={last.get('started', {}).get('ui')}")
+    check("music plays", peak["music"] > 0.001, f"peak={peak['music']} track={last.get('music')}")
+    check("battle sound effects produce audio signal", peak["effect"] > 0.001, f"peak={peak['effect']} started={last.get('started', {}).get('effect')}")
+
+    # --- Lag over the whole run.
+    lags = [int(m.group(1)) for l in console_lines() for m in [re.search(r"lagMax5s=(\d+)ms", l)] if m]
+    after_load = lags[1:] if len(lags) > 1 else lags
+    worst = max(after_load, default=0)
+    check("no main-thread stall over 250 ms after loading", worst <= 250, f"worst={worst}ms over {len(after_load) * 5}s")
+    errs = [l for l in console_lines() if "[pp] ERROR" in l]
+    check("no JavaScript errors", not errs, "; ".join(e.split("ERROR", 1)[1].strip()[:120] for e in errs[:3]))
 
 
 if __name__ == "__main__":
@@ -189,3 +282,5 @@ if __name__ == "__main__":
         main()
     finally:
         (OUT / "steps.txt").write_text("\n".join(STEPS) + "\n")
+        (OUT / "results.txt").write_text("\n".join(RESULTS) + "\n")
+        print("\n=== RESULTS ===\n" + "\n".join(RESULTS))

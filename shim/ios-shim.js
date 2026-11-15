@@ -321,6 +321,28 @@
 		if (e.isTrusted && now() - lastTouchUp < 600) e.stopImmediatePropagation();
 	}, true);
 
+	// Tapping a team Pokémon's picture = its (tiny) red deploy button, on touch only.
+	// On PC a single click on the picture does nothing; a double-click sends the
+	// Pokémon back to the Box - so wait briefly and skip if a second tap follows.
+	let spriteTapTimer = null;
+	window.addEventListener('click', (e) => {
+		if (!e.isTrusted || now() - lastTouchUp > 600) return;
+		const sprite = e.target.closest && e.target.closest('.ui-pokemon-sprite');
+		if (!sprite) return;
+		const slot = sprite.closest('.ui-pokemon');
+		const deploy = slot && slot.querySelector('.ui-pokemon-button');
+		if (!deploy || !deploy.getClientRects().length || !deploy.getBoundingClientRect().width) return;
+		if (spriteTapTimer) { // second tap of a double-tap
+			clearTimeout(spriteTapTimer);
+			spriteTapTimer = null;
+			return;
+		}
+		spriteTapTimer = setTimeout(() => {
+			spriteTapTimer = null;
+			deploy.click();
+		}, 320);
+	}, true);
+
 	// No pinch-zoom / double-tap zoom.
 	for (const t of ['gesturestart', 'gesturechange', 'gestureend']) {
 		document.addEventListener(t, (e) => e.preventDefault(), { passive: false });
