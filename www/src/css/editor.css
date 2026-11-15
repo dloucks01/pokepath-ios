@@ -42,7 +42,7 @@
 
 .editor-map-selector-left { left: -25px; border-radius: 5px 0px 0px 5px; }
 .editor-map-selector-right { right: -25px; border-radius: 0px 5px 5px 0px; }
-.editor-map-selector-right:hover, .editor-map-selector-left:hover { filter: brightness(1.2); }
+@media (hover: hover) and (pointer: fine) {.editor-map-selector-right:hover, .editor-map-selector-left:hover { filter: brightness(1.2); }}
 
 .editor-wave-pause {
 	position: absolute;
@@ -61,9 +61,9 @@
 	cursor: pointer;
 }
 
-.editor-wave-pause:hover {
+@media (hover: hover) and (pointer: fine) {.editor-wave-pause:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .editor-wave-time-line {
 	position: absolute;
@@ -95,10 +95,10 @@
     background: var(--scrollBarColor2); 
     box-shadow: inset 0 2px 0 rgba(255,255,255,0.2);
 }
-.editor-wave-time-line::-webkit-scrollbar-thumb:hover {
+@media (hover: hover) and (pointer: fine) {.editor-wave-time-line::-webkit-scrollbar-thumb:hover {
     background: var(--scrollBarColor2); 
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
-}
+}}
 
 .editor-wave-time-line-slot {
 	position: relative;
@@ -179,10 +179,10 @@
     background: var(--scrollBarColor2); 
     box-shadow: inset 0 2px 0 rgba(255,255,255,0.2);
 }
-.editor-enemy-container::-webkit-scrollbar-thumb:hover {
+@media (hover: hover) and (pointer: fine) {.editor-enemy-container::-webkit-scrollbar-thumb:hover {
     background: var(--scrollBarColor2); 
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
-}
+}}
 
 .editor-enemy {
 	position: relative;
@@ -193,9 +193,9 @@
 	cursor: pointer;
 }
 
-.editor-enemy:hover {
+@media (hover: hover) and (pointer: fine) {.editor-enemy:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px black);
-}
+}}
 
 .editor-wave-bonus-container {
 	position: absolute;
@@ -241,9 +241,9 @@
 	text-align: center;
 }
 
-.editor-wave-bonus-option-left:hover, .editor-wave-bonus-option-right:hover {
+@media (hover: hover) and (pointer: fine) {.editor-wave-bonus-option-left:hover, .editor-wave-bonus-option-right:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .editor-map-import-code {
 	position: absolute;
@@ -290,9 +290,9 @@
 	cursor: pointer;
 }
 
-.editor-map-load-button:hover, .editor-map-copy-button:hover {
+@media (hover: hover) and (pointer: fine) {.editor-map-load-button:hover, .editor-map-copy-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .editor-wave-play-button {
 	position: absolute;
@@ -311,9 +311,9 @@
 	border-radius: 0 5px 5px 0;
 }
 
-.editor-wave-play-button:hover {
+@media (hover: hover) and (pointer: fine) {.editor-wave-play-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .editor-wave-time-line-slot {
     position: relative;

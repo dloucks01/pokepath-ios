@@ -659,9 +659,9 @@ canvas {
 
 }
 
-.link-red:hover {
+@media (hover: hover) and (pointer: fine) {.link-red:hover {
     filter: brightness(1.2);
-}
+}}
 
 .link-blue {
     cursor: pointer;

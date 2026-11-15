@@ -42,7 +42,7 @@ http.createServer((req, res) => {
 		const headers = {
 			'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
 			'Accept-Ranges': 'bytes',
-			'Cache-Control': /\/(sw\.js|precache-manifest\.json|index\.html)$/.test(file.replace(/\\/g, '/')) ? 'no-cache' : 'public, max-age=3600'
+			'Cache-Control': 'no-cache' // dev server: always pick up a fresh build
 		};
 		const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
 		if (m) {

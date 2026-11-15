@@ -224,10 +224,59 @@ function patchGame() {
 	});
 }
 
+function replaceAudio() {
+	// Swap the game's <audio>-element sound system for the Web Audio engine in shim/,
+	// reusing the game's own sound lists so new sounds in future versions carry over.
+	const rel = 'src/js/file/audio.js';
+	const p = path.join(WWW, rel);
+	if (!fs.existsSync(p)) { warn(`${rel} not found - sound engine not replaced`); return; }
+	const src = fs.readFileSync(p, 'utf8');
+	const banks = { ui: {}, effect: {}, music: {} };
+	const names = { soundUi: 'ui', soundEffect: 'effect', soundMusic: 'music' };
+	for (const m of src.matchAll(/export const (soundUi|soundEffect|soundMusic)\s*=\s*loadSounds\(\{([\s\S]*?)\}\s*(?:,\s*\{[^}]*\})?\s*\)/g)) {
+		for (const e of m[2].matchAll(/([A-Za-z0-9_$]+)\s*:\s*['"`]([^'"`]+)['"`]/g)) banks[names[m[1]]][e[1]] = e[2];
+	}
+	const total = Object.values(banks).reduce((n, b) => n + Object.keys(b).length, 0);
+	const exportsOk = ['playSound', 'playMusic', 'setVolume'].every((f) => src.includes(`export function ${f}(`));
+	if (total < 20 || !Object.keys(banks.music).length || !exportsOk) {
+		warn(`${rel}: couldn't read the sound lists (found ${total}) - keeping the original sound system`);
+		return;
+	}
+	const engine = fs.readFileSync(path.join(SHIM, 'audio-engine.js'), 'utf8')
+		.replace(/\/\*__PP_BANKS__\*\/\s*\{[^;]*\}/, JSON.stringify(banks, null, '\t'));
+	fs.writeFileSync(p, engine);
+	log(`Sound engine replaced (${Object.keys(banks.ui).length} UI, ${Object.keys(banks.effect).length} effects, ${Object.keys(banks.music).length} music)`);
+}
+
+function patchInitPreload() {
+	// The loading screen preloaded every sound as an <audio> element; the new engine
+	// decodes them itself, so skip that (also makes loading faster).
+	patchFile('src/js/game/Init.js', (src) =>
+		src.replace('const sounds = Array.isArray(assets.sounds) ? assets.sounds : [];', 'const sounds = []; // iPhone build: sounds are decoded by the Web Audio engine'));
+}
+
+function patchHoverCss() {
+	// On iPhone a tap first triggers :hover; if that changes how something looks, iOS
+	// treats the tap as a hover and swallows the click. Keep :hover styles for real mice.
+	const files = ['styles.css', ...fs.readdirSync(path.join(WWW, 'src', 'css')).filter((f) => f.endsWith('.css')).map((f) => `src/css/${f}`)];
+	let wrapped = 0;
+	for (const rel of files) {
+		patchFile(rel, (css) => css.replace(/([^{}@;]*:hover[^{}]*)\{([^{}]*)\}/g, (all, selector, body) => {
+			const parts = selector.split(/,(?![^(]*\))/);
+			const hover = parts.filter((s) => s.includes(':hover'));
+			const other = parts.filter((s) => !s.includes(':hover'));
+			const lead = selector.match(/^\s*/)[0];
+			wrapped++;
+			const hoverRule = `@media (hover: hover) and (pointer: fine) {${hover.join(',').trim()} {${body}}}`;
+			return lead + (other.length ? `${other.join(',').trim()} {${body}}\n` : '') + hoverRule;
+		}));
+	}
+	log(`Hover styles limited to mouse devices (${wrapped} rules)`);
+}
+
 function checkAssumptions() {
 	const read = (rel) => { try { return fs.readFileSync(path.join(WWW, rel), 'utf8'); } catch { return ''; } };
 	if (!/function resize\(\)/.test(read('src/js/game/Main.js'))) warn('Main.js resize() not found - screen scaling may differ.');
-	if (!/new Audio\(/.test(read('src/js/file/audio.js'))) warn('audio.js no longer uses new Audio() - check sound on iPhone.');
 }
 
 /* ------------------------------------------------------------------ artwork */
@@ -329,6 +378,9 @@ log('Applying iPhone patches');
 patchIndex();
 patchTooltip();
 patchGame();
+replaceAudio();
+patchInitPreload();
+patchHoverCss();
 checkAssumptions();
 fs.mkdirSync(path.join(WWW, 'ios'), { recursive: true });
 for (const f of ['ios-shim.js', 'ios-shim.css', 'debug-hud.js']) fs.copyFileSync(path.join(SHIM, f), path.join(WWW, 'ios', f));

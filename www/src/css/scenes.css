@@ -75,9 +75,9 @@ body[data-font="Rubik"] .game-scene-close-button { top: 4px; font-size: 16px; }
 body[data-font="DynaPuff"] .game-scene-close-button  { top: 0px; }
 body[data-font="Unown"] .game-scene-close-button  { top: 1px; }
 
-.game-scene-close-button:hover {
+@media (hover: hover) and (pointer: fine) {.game-scene-close-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 /* PROFILE */
 /* PROFILE */
@@ -119,9 +119,9 @@ body[data-font="Unown"] .game-scene-close-button  { top: 1px; }
 	text-align: center;
 }
 
-.draft-scene-pokemon:hover {
+@media (hover: hover) and (pointer: fine) {.draft-scene-pokemon:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px var(--white));
-}
+}}
 
 .draft-scene-data-button-container {
 	position: absolute;
@@ -152,9 +152,9 @@ body[data-font="Unown"] .game-scene-close-button  { top: 1px; }
 	background: linear-gradient(39deg,rgba(44, 112, 227, 1) 0%, rgba(57, 102, 179, 1) 100%);
 }
 
-.draft-scene-pokemon-data:hover {
+@media (hover: hover) and (pointer: fine) {.draft-scene-pokemon-data:hover {
 	filter: brightness(1.2);
-}
+}}
 
 body[data-font="Lexend"] .draft-scene-pokemon-data {
 	font-size: 9px;
@@ -213,10 +213,10 @@ body[data-font="Lexend"] .draft-scene-reroll-button {
 }
 
 
-.draft-scene-reroll-button:hover, .draft-scene-restart-button:hover {
+@media (hover: hover) and (pointer: fine) {.draft-scene-reroll-button:hover, .draft-scene-restart-button:hover {
 	filter: brightness(1.2);
 	transform: scale(1.05);
-}
+}}
 
 .draft-scene-reroll-button.disabled {
 	filter: grayscale(1) opacity(0.5);
@@ -225,10 +225,10 @@ body[data-font="Lexend"] .draft-scene-reroll-button {
 	transform: scale(1) !important;
 }
 
-.draft-scene-reroll-button:not(.disabled):hover {
+@media (hover: hover) and (pointer: fine) {.draft-scene-reroll-button:not(.disabled):hover {
 	filter: brightness(1.2);
 	transform: scale(1.05);
-}
+}}
 
 /* POKEMON DATA */
 /* POKEMON DATA */
@@ -245,9 +245,9 @@ body[data-font="Lexend"] .draft-scene-reroll-button {
 	cursor: pointer;
 }
 
-.pokemon-scene-name:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-name:hover {
 	filter: brightness(1.2);
-}
+}}
 
 body[data-font="Lexend"] .pokemon-scene-name { top: 18px; }
 body[data-font="DynaPuff"] .pokemon-scene-name { top: 18px; }
@@ -310,9 +310,9 @@ body[data-font="Unown"] .pokemon-scene-arrow-next {
 	font-weight: bold;
 }
 
-.pokemon-scene-arrow-prev:hover, .pokemon-scene-arrow-next:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-arrow-prev:hover, .pokemon-scene-arrow-next:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .pokemon-scene-data-container {
 	position: absolute;
@@ -445,9 +445,9 @@ body[data-font="Unown"] .pokemon-scene-data-arrow-at  {
 }
 
 
-.pokemon-scene-data-arrow-at:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-data-arrow-at:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .pokemon-scene-ability-container {
 	/*position: absolute;
@@ -568,10 +568,10 @@ body[data-font="Unown"] .pokemon-scene-data-arrow-at  {
 
 body[data-font="Lexend"] .pokemon-scene-item-icon { line-height: 20px; }
 
-.pokemon-scene-item-icon:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-item-icon:hover {
 	filter: brightness(1.2);
 	background-color: var(--red);
-}
+}}
 
 .pokemon-scene-item-description {
 	position: absolute;
@@ -603,9 +603,9 @@ body[data-font="Lexend"] .pokemon-scene-item-icon { line-height: 20px; }
 	text-shadow: 1px 1px black;
 }
 
-.pokemon-scene-favorite-item-button:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-favorite-item-button:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px black);
-}
+}}
 
 .pokemon-scene-level-up-container {
 	position: absolute;
@@ -634,7 +634,7 @@ body[data-font="Lexend"] .pokemon-scene-item-icon { line-height: 20px; }
 	cursor: pointer;
 }
 
-.pokemon-scene-level-up:hover { filter: brightness(1.2); }
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-level-up:hover { filter: brightness(1.2); }}
 
 body[data-font="Lexend"] .pokemon-scene-level-up {
 	font-size: 10px;
@@ -661,7 +661,7 @@ body[data-font="Rubik"] .pokemon-scene-level-up {
 	transition: .2s;
 }
 
-.pokemon-scene-button-dna:hover { filter: brightness(1.2);}
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-button-dna:hover { filter: brightness(1.2);}}
 
 .pokemon-scene-evolution-sprite, .pokemon-scene-reset-sprite {
 	position: absolute;
@@ -687,9 +687,9 @@ body[data-font="Rubik"] .pokemon-scene-level-up {
 	transition: .2s;
 }
 
-.pokemon-scene-reset-sprite:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-reset-sprite:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px black);
-}
+}}
 
 .pokemon-scene-evolution-level {
 	position: absolute;
@@ -752,9 +752,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	cursor: pointer;
 }
 
-.pokemon-scene-skin-slot:hover {
+@media (hover: hover) and (pointer: fine) {.pokemon-scene-skin-slot:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px black);
-}
+}}
 
 .pokemon-scene-extra-container {
 	position: absolute;
@@ -862,9 +862,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	font-weight: bold;
 }
 
-.item-scene-slot:hover {
+@media (hover: hover) and (pointer: fine) {.item-scene-slot:hover {
 	filter: brightness(1.2) drop-shadow(0 0 2px var(--white));
-}
+}}
 
 .item-scene-slot-equiped {
 	position: absolute;
@@ -971,9 +971,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	background-color: #2d70e3;
 }
 
-.defeat-restart-button:hover, .defeat-retry-button:hover {
+@media (hover: hover) and (pointer: fine) {.defeat-restart-button:hover, .defeat-retry-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .defeat-scene-info {
 	position: absolute;
@@ -1066,9 +1066,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	transition: .2s;
 }
 
-.final-accept-button:hover {
+@media (hover: hover) and (pointer: fine) {.final-accept-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .defeat-scene-banette {
 	position: absolute;
@@ -1115,10 +1115,10 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 .profile-scene-avatar-arrow-prev-ng { left: 91px; }
 .profile-scene-avatar-arrow-next-ng { right: 88px; }
 
-.profile-scene-avatar-arrow-prev-ng:hover, .profile-scene-avatar-arrow-next-ng:hover {
+@media (hover: hover) and (pointer: fine) {.profile-scene-avatar-arrow-prev-ng:hover, .profile-scene-avatar-arrow-next-ng:hover {
 	color: var(--red);
 	filter: brightness(1.2);
-}
+}}
 
 .profile-scene-name-ng {
 	position: absolute;
@@ -1158,9 +1158,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	filter: brightness(0.6) drop-shadow(1px 1px black);
 }
 
-.new-game-flag:hover {
+@media (hover: hover) and (pointer: fine) {.new-game-flag:hover {
 	filter: brightness(1) drop-shadow(1px 1px black);;
-}
+}}
 
 .new-game-flag:nth-child(1) { background-image: url('../assets/images/icons/en.png');}
 .new-game-flag:nth-child(2) { background-image: url('../assets/images/icons/es.png');}
@@ -1225,9 +1225,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	transition: .1s;
 }
 
-.new-game-starter:hover {
+@media (hover: hover) and (pointer: fine) {.new-game-starter:hover {
 	filter: brightness(1);
-}
+}}
 
 .new-game-start-button {
 	position: absolute;
@@ -1247,9 +1247,9 @@ body[data-font="Rubik"] .pokemon-scene-evolution-level {font-size: 10px}
 	transition: .2s;
 }
 
-.new-game-start-button:hover {
+@media (hover: hover) and (pointer: fine) {.new-game-start-button:hover {
 	filter: brightness(1.2);
-}
+}}
 
 /* MENU */
 
@@ -1324,9 +1324,9 @@ body[data-font="Lexend"] .tutorial-scene-title { top: 15px; }
 
 .tutorial-scene-next  {right: 20px;}
 
-.tutorial-scene-prev:hover, .tutorial-scene-next:hover {
+@media (hover: hover) and (pointer: fine) {.tutorial-scene-prev:hover, .tutorial-scene-next:hover {
 	filter: brightness(1.2);
-}
+}}
 
 /* DEX */
 /* DEX */
@@ -1357,9 +1357,9 @@ body[data-font="Lexend"] .tutorial-scene-title { top: 15px; }
 	box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2), inset -1px -2px 0 rgba(0, 0, 0, 0.3);
 }
 
-.dex-scene-tab:hover {
+@media (hover: hover) and (pointer: fine) {.dex-scene-tab:hover {
 	filter: brightness(1.2);
-}
+}}
 
 .dex-scene-tab.active {
 	background: linear-gradient(180deg, var(--dexTab2) 0%, var(--dexTab3) 100%);
@@ -1418,9 +1418,9 @@ body[data-font="Lexend"] .tutorial-scene-title { top: 15px; }
 	cursor: pointer;
 }
 
-.dex-scene-sort-arrow:hover {
+@media (hover: hover) and (pointer: fine) {.dex-scene-sort-arrow:hover {
 	color: var(--arrowHover);
-}
+}}
 
 .dex-scene-sort-value {
 	position: relative;
@@ -1454,9 +1454,9 @@ body[data-font="Lexend"] .tutorial-scene-title { top: 15px; }
 	padding-top: 45px;
 }
 
-.dex-scene-entry-name:hover {
+@media (hover: hover) and (pointer: fine) {.dex-scene-entry-name:hover {
 	text-indent: 10px;
-}
+}}
 
 .dex-scene-entry-sprite {
 	position: absolute;
@@ -1654,10 +1654,10 @@ body[data-font="Unown"] .dex-scene-entry-description-text {
     box-shadow: inset 0 2px 0 rgba(255,255,255,0.2);
 }
 
-.dex-scene-list::-webkit-scrollbar-thumb:hover {
+@media (hover: hover) and (pointer: fine) {.dex-scene-list::-webkit-scrollbar-thumb:hover {
 	background: var(--scrollBarColor2); 
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
-}
+}}
 
 
 .dex-scene-entry-data-row.extra-stat .dex-scene-entry-data-label,

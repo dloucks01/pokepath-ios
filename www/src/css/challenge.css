@@ -44,10 +44,10 @@
 	transition: 0.1s;	
 }
 
-.challenge-scene-list-row:hover {
+@media (hover: hover) and (pointer: fine) {.challenge-scene-list-row:hover {
 	background-color: rgba(60, 60, 60, 0.25);
 	border-bottom-color: var(--challengeColor1);
-}
+}}
 
 .challenge-scene-list-row-ribbon-container {
 	position: absolute;
@@ -181,13 +181,13 @@
 	overflow: hidden;
 }
 
-.challenge-scene-start-button:hover {
+@media (hover: hover) and (pointer: fine) {.challenge-scene-start-button:hover {
 	filter: brightness(1.15);
 	box-shadow: 
 		inset 1px 1px 0 rgba(255, 255, 255, 0.3), 
 		inset -1px -2px 0 rgba(0, 0, 0, 0.4),
 		0 0 10px rgba(0,0,0,0.3);
-}
+}}
 
 .challenge-scene-start-button:active {
 	transform: translateX(-50%) translateY(1px);
@@ -240,11 +240,11 @@
 	transition: 0.1s;
 }
 
-.reward-scene-item:hover {
+@media (hover: hover) and (pointer: fine) {.reward-scene-item:hover {
 	background-color: rgba(163, 54, 53, 0.15);
 	border-color: var(--red);
 	transform: translateY(-2px);
-}
+}}
 
 .reward-scene-claim {
 	position: absolute;

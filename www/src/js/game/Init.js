@@ -84,7 +84,7 @@ export class Init {
 
     preloadAssets(assets, onComplete) {
         const images = Array.isArray(assets.images) ? assets.images : [];
-        const sounds = Array.isArray(assets.sounds) ? assets.sounds : [];
+        const sounds = []; // iPhone build: sounds are decoded by the Web Audio engine
 
         const total = images.length + sounds.length;
 

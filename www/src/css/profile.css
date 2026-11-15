@@ -20,11 +20,14 @@
 	cursor: pointer;
 }
 
-.profile-scene-portrait:hover,
 .profile-scene-portrait:focus-visible {
 	filter: drop-shadow(3px 3px 0 black) brightness(1.15);
 	outline: none;
 }
+@media (hover: hover) and (pointer: fine) {.profile-scene-portrait:hover {
+	filter: drop-shadow(3px 3px 0 black) brightness(1.15);
+	outline: none;
+}}
 
 .profile-scene-avatar-picker {
 	position: absolute;
@@ -53,10 +56,10 @@
     background: var(--scrollBarColor2); 
     box-shadow: inset 0 2px 0 rgba(255,255,255,0.2);
 }
-.profile-scene-avatar-picker::-webkit-scrollbar-thumb:hover {
+@media (hover: hover) and (pointer: fine) {.profile-scene-avatar-picker::-webkit-scrollbar-thumb:hover {
     background: var(--scrollBarColor2);  
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
-}
+}}
 
 .profile-scene-avatar-picker.is-open {
 	display: grid;
@@ -71,12 +74,16 @@
 	cursor: pointer;
 }
 
-.profile-scene-avatar-option:hover,
 .profile-scene-avatar-option:focus-visible {
 	border-color: var(--arrowHover);
 	outline: none;
 	filter: brightness(1.2);
 }
+@media (hover: hover) and (pointer: fine) {.profile-scene-avatar-option:hover {
+	border-color: var(--arrowHover);
+	outline: none;
+	filter: brightness(1.2);
+}}
 
 .profile-scene-avatar-option.is-selected {
 	filter: drop-shadow(0 0 2px black);
@@ -129,11 +136,11 @@ body[data-font="Lexend"] .profile-scene-name { bottom: 4px; }
 .profile-scene-avatar-arrow-prev { left: 10px; }
 .profile-scene-avatar-arrow-next { right: 10px; }
 
-.profile-scene-avatar-arrow-prev:hover, 
+@media (hover: hover) and (pointer: fine) {.profile-scene-avatar-arrow-prev:hover, 
 .profile-scene-avatar-arrow-next:hover {
 	color: var(--arrowHover);
 	transform: scale(1.1);
-}
+}}
 
 .profile-scene-avatar-arrow-prev:active, 
 .profile-scene-avatar-arrow-next:active {

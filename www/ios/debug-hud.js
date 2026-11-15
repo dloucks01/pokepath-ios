@@ -43,7 +43,8 @@
 			`view ${innerWidth}x${innerHeight} dpr=${devicePixelRatio} orient=${matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape'} scale=${root ? root.style.transform : '-'}`,
 			`center hit: ${describe(document.elementFromPoint(cx, cy))}`,
 			`audio=${window.__ppAudioState ? window.__ppAudioState() : '?'}  worker=${workerStatus}  game=${!!window.__pokeGame}`,
-			`counts ${Object.entries(counts).map(([k, v]) => k + ':' + v).join(' ')}`
+			`counts ${Object.entries(counts).map(([k, v]) => k + ':' + v).join(' ')}`,
+			`main-thread lag (worst in last 5s): ${Math.round(Math.max(...lagWindow, 0))} ms`
 		];
 		const errText = errors.slice(-6).map((e) => '✖ ' + e);
 		panel.textContent = [...info, ...errText, '—', ...lines.slice(-12)].join('\n');
@@ -110,6 +111,16 @@
 	} catch (err) {
 		workerStatus = 'throws: ' + err.message;
 	}
+
+	// How late a 100 ms timer fires = how long the page was too busy to react to touches.
+	const lagWindow = [];
+	let expected = performance.now() + 100;
+	setInterval(() => {
+		const t = performance.now();
+		lagWindow.push(Math.max(0, t - expected));
+		if (lagWindow.length > 50) lagWindow.shift();
+		expected = t + 100;
+	}, 100);
 
 	setInterval(render, 1000);
 	document.addEventListener('DOMContentLoaded', render);

@@ -141,9 +141,9 @@ html.disable-shop-background-animation .section-scene-container-shop {
     position: relative;
     z-index: 2;
 }
-.shop-scene-item:hover { 
+@media (hover: hover) and (pointer: fine) {.shop-scene-item:hover { 
     filter: brightness(1.2);
-}
+}}
 
 .shop-scene-item:nth-child(2),
 .shop-scene-item:nth-child(3),
@@ -170,9 +170,9 @@ html.disable-shop-background-animation .section-scene-container-shop {
     background-image: url("../assets/images/icons/egg.png");
 }
 
-.shop-scene-item:hover { 
+@media (hover: hover) and (pointer: fine) {.shop-scene-item:hover { 
     filter: brightness(1.2);
-}
+}}
 
 .shop-scene-purchase {
     position: absolute;
@@ -235,9 +235,9 @@ body[data-font="Lexend"] .shop-scene-purchase-egg { font-size: 15px }
 body[data-font="Rubik"] .shop-scene-purchase-egg { font-size: 17px }
 body[data-font="DynaPuff"] .shop-scene-purchase-egg { font-size: 15px }
 
-.shop-scene-purchase-egg:hover {
+@media (hover: hover) and (pointer: fine) {.shop-scene-purchase-egg:hover {
     filter: brightness(1.2);
-}
+}}
 
 .dp-scene-prompt {
 	position: absolute;
