@@ -51,7 +51,10 @@
 		panel.style.color = errors.length ? '#fbb' : '#9f9';
 	};
 
+	// In the native app, console.log goes to the Xcode/simulator console (used by CI tests).
+	const consoleLog = console.log.bind(console);
 	const log = (s) => {
+		if (window.PP_DEBUG) consoleLog('[pp] ' + s);
 		lines.push(s);
 		if (lines.length > 40) lines.shift();
 		render();
@@ -59,7 +62,11 @@
 
 	// ---- errors (from the very start) ----
 	window.addEventListener('error', (e) => {
-		errors.push(`${e.message} @ ${(e.filename || '').split('/').slice(-2).join('/')}:${e.lineno}`);
+		const msg = e.message
+			? `${e.message} @ ${(e.filename || '').split('/').slice(-2).join('/')}:${e.lineno}`
+			: `failed to load ${describe(e.target)} ${e.target && (e.target.src || e.target.href) || ''}`;
+		errors.push(msg);
+		if (window.PP_DEBUG) consoleLog('[pp] ERROR ' + msg);
 		render();
 	}, true);
 	window.addEventListener('unhandledrejection', (e) => {
@@ -123,5 +130,12 @@
 	}, 100);
 
 	setInterval(render, 1000);
+
+	// Periodic one-line status for test logs.
+	setInterval(() => {
+		if (!window.PP_DEBUG) return;
+		const root = document.getElementById('screen-root');
+		consoleLog(`[pp] STATUS t=${((performance.now() - t0) / 1000).toFixed(0)}s view=${innerWidth}x${innerHeight} scale=${root ? root.style.transform : '-'} audio=${window.__ppAudioState ? window.__ppAudioState() : '?'} worker=${workerStatus} game=${!!window.__pokeGame} wave=${!!(window.__pokeGame && window.__pokeGame.main && window.__pokeGame.main.area && window.__pokeGame.main.area.waveActive)} lagMax5s=${Math.round(Math.max(...lagWindow, 0))}ms errors=${errors.length} counts=${JSON.stringify(counts)}`);
+	}, 5000);
 	document.addEventListener('DOMContentLoaded', render);
 })();

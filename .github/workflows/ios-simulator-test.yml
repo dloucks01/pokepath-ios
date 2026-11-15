@@ -1,0 +1,99 @@
+# Runs PokéPath TD in the iOS Simulator on the largest available iPhone Pro Max,
+# taps through the first-launch flow and a wave, and uploads screenshots + the
+# app's console log (including the diagnostics panel's [pp] lines).
+name: iPhone Simulator test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'www/**'
+      - 'native/**'
+      - 'capacitor.config.json'
+      - '.github/workflows/ios-simulator-test.yml'
+
+concurrency:
+  group: ios-sim-test
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use the newest Xcode on the runner
+        run: |
+          NEWEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$NEWEST"
+          xcodebuild -version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Prepare the Xcode project
+        run: |
+          npm ci
+          npx cap add ios --packagemanager SPM
+          npx cap sync ios
+          bash native/configure-ios.sh
+
+      - name: Build for the Simulator (Debug, so JS console output reaches stdout)
+        working-directory: ios/App
+        run: |
+          if ! xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+              -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+              -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > xcodebuild.log 2>&1; then
+            grep -E "error:" xcodebuild.log | sort -u | head -40; tail -n 60 xcodebuild.log; exit 1
+          fi
+          ls build/Build/Products/Debug-iphonesimulator/App.app/App
+
+      - name: Pick device and boot it
+        id: sim
+        run: |
+          xcrun simctl list devicetypes | grep -i "pro max" || true
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x.get('platform','iOS')=='iOS' and x['isAvailable']]; r.sort(key=lambda x:[int(p) for p in x['version'].split('.')]); print(r[-1]['identifier'])")
+          for NAME in "iPhone 18 Pro Max" "iPhone 17 Pro Max" "iPhone 16 Pro Max" "iPhone 15 Pro Max"; do
+            if xcrun simctl list devicetypes | grep -q "^$NAME ("; then DEVICE="$NAME"; break; fi
+          done
+          echo "Using $DEVICE on $RUNTIME"
+          UDID=$(xcrun simctl create "PokePath Test" "$DEVICE" "$RUNTIME")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          open -a Simulator --args -CurrentDeviceUDID "$UDID" || true
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "device=$DEVICE / $RUNTIME" >> "$GITHUB_OUTPUT"
+
+      - name: Install idb (simulated taps)
+        run: |
+          brew tap facebook/fb
+          brew install facebook/fb/idb-companion
+          pipx install fb-idb
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run the game and tap through it
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          mkdir -p sim-results
+          echo "${{ steps.sim.outputs.device }}" > sim-results/device.txt
+          idb_companion --udid "$UDID" > sim-results/idb-companion.log 2>&1 &
+          sleep 5
+          idb connect "$UDID" || true
+          xcrun simctl install "$UDID" ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          # --console-pty keeps the app's stdout (Capacitor prints JS console there)
+          xcrun simctl launch --console-pty --terminate-running-process "$UDID" local.pokepath.td > sim-results/app-console.log 2>&1 &
+          python3 native/sim_driver.py "$UDID" sim-results || true
+          sleep 2
+          grep -E "\[pp\]|ERROR|error" sim-results/app-console.log | tail -n 120 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: simulator-results
+          path: sim-results
+          retention-days: 14
