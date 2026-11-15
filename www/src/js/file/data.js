@@ -98,7 +98,7 @@ export const loadData = () => {
     return JSON.parse(data); 
 }
 
-export const saveData = (player, team, box, area, shop, teamManager) => {
+const __ppSaveData = (player, team, box, area, shop, teamManager) => {
     const data = JSON.parse(window.localStorage.getItem("data"));
     data.save = {
         new: false,
@@ -112,3 +112,11 @@ export const saveData = (player, team, box, area, shop, teamManager) => {
 
     window.localStorage.setItem("data", JSON.stringify(data));
 }
+
+/* --- iPhone build: save timing for the diagnostics panel (added by tools/build.mjs) --- */
+export const saveData = (...args) => {
+	const t = performance.now();
+	const result = __ppSaveData(...args);
+	if (window.__ppSlow) window.__ppSlow('save', performance.now() - t, (window.localStorage.getItem('data') || '').length + ' chars');
+	return result;
+};

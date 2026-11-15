@@ -133,7 +133,9 @@ function load(url) {
 	if (!c) return Promise.reject(new Error('no Web Audio'));
 	const p = fetch(url)
 		.then((r) => {
-			if (!r.ok) throw new Error(`${r.status} ${url}`);
+			// The iOS app's local file handler answers with status 0 (not 200) even
+			// though the data is all there - only a real HTTP error status is a failure.
+			if (!r.ok && r.status !== 0) throw new Error(`HTTP ${r.status} ${url}`);
 			return r.arrayBuffer();
 		})
 		.then((data) => new Promise((resolve, reject) => {

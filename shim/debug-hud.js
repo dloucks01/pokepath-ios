@@ -119,6 +119,22 @@
 		workerStatus = 'throws: ' + err.message;
 	}
 
+	// What the player did last, to attribute stalls.
+	const lastAction = { what: 'none', at: 0 };
+	for (const type of ['pointerdown', 'keydown']) {
+		window.addEventListener(type, (e) => {
+			lastAction.what = `${type} ${describe(e.target)}`;
+			lastAction.at = performance.now();
+		}, { capture: true, passive: true });
+	}
+	// Slow saves / game frames, reported by the patched game code.
+	if (window.PP_DEBUG) {
+		window.__ppSlow = (kind, ms, info) => {
+			if ((kind === 'frame' && ms < 40) || (kind === 'save' && ms < 15)) return;
+			consoleLog(`[pp] SLOW ${kind} ${Math.round(ms)}ms ${info || ''} (t=${((performance.now() - t0) / 1000).toFixed(1)}s, last action: ${lastAction.what})`);
+		};
+	}
+
 	// Startup phases, to see where time goes.
 	let phase = 'boot';
 	const mark = (name) => {
@@ -143,7 +159,7 @@
 	setInterval(() => {
 		const t = performance.now();
 		const lag = Math.max(0, t - expected);
-		if (lag > 250 && window.PP_DEBUG) consoleLog(`[pp] BLOCKED ${Math.round(lag)}ms ending at t=${((t - t0) / 1000).toFixed(1)}s (phase: ${phase})`);
+		if (lag > 250 && window.PP_DEBUG) consoleLog(`[pp] BLOCKED ${Math.round(lag)}ms ending at t=${((t - t0) / 1000).toFixed(1)}s (phase: ${phase}; last action: ${lastAction.what} ${Math.round(t - lastAction.at)}ms before)`);
 		lagWindow.push(lag);
 		if (lagWindow.length > 50) lagWindow.shift();
 		expected = t + 100;
@@ -167,6 +183,8 @@
 		add('end', leaves.find((e) => e.textContent.trim() === 'END'));
 		add('nextWave', document.querySelector('.ui-next-wave'));
 		add('pause', document.querySelector('.ui-pause-wave'));
+		add('speed', document.querySelector('.ui-speed-wave'));
+		add('autoWave', document.querySelector('.ui-auto-wave'));
 		add('teamSlot1', document.querySelector('.ui-pokemon'));
 		add('sprite1', document.querySelector('.ui-pokemon .ui-pokemon-sprite'));
 		add('deploy1', document.querySelector('.ui-pokemon .ui-pokemon-button')); // red "deploy" button of slot 1

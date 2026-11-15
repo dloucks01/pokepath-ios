@@ -2034,4 +2034,20 @@ export class Game {
 			return original.apply(this, args);
 		};
 	}
+	// Diagnostics: report game frames that take too long (only when the panel's test mode is on).
+	const animate = P.animate;
+	if (typeof animate === 'function') {
+		P.animate = function (...args) {
+			if (!window.__ppSlow) return animate.apply(this, args);
+			const t = performance.now();
+			const r = animate.apply(this, args);
+			const ms = performance.now() - t;
+			if (ms > 40) {
+				const a = this.main && this.main.area;
+				window.__ppSlow('frame', ms, 'wave=' + (a && a.waveNumber) + ' enemies=' + (a && a.enemies ? a.enemies.length : '?') +
+					' towers=' + (a && a.towers ? a.towers.length : '?') + ' speed=' + this.speedFactor);
+			}
+			return r;
+		};
+	}
 })();

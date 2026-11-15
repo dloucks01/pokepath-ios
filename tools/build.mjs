@@ -219,6 +219,22 @@ function patchGame() {
 			return original.apply(this, args);
 		};
 	}
+	// Diagnostics: report game frames that take too long (only when the panel's test mode is on).
+	const animate = P.animate;
+	if (typeof animate === 'function') {
+		P.animate = function (...args) {
+			if (!window.__ppSlow) return animate.apply(this, args);
+			const t = performance.now();
+			const r = animate.apply(this, args);
+			const ms = performance.now() - t;
+			if (ms > 40) {
+				const a = this.main && this.main.area;
+				window.__ppSlow('frame', ms, 'wave=' + (a && a.waveNumber) + ' enemies=' + (a && a.enemies ? a.enemies.length : '?') +
+					' towers=' + (a && a.towers ? a.towers.length : '?') + ' speed=' + this.speedFactor);
+			}
+			return r;
+		};
+	}
 })();
 `;
 	});
@@ -288,6 +304,23 @@ function patchHoverCss() {
 		}));
 	}
 	log(`Hover styles limited to mouse devices (${wrapped} rules)`);
+}
+
+function patchSaveTiming() {
+	// Diagnostics: time each save (the game rewrites the whole save in one go).
+	patchFile('src/js/file/data.js', (src) => {
+		if (!src.includes('export const saveData = (')) return src;
+		return src.replace('export const saveData = (', 'const __ppSaveData = (') + `
+
+/* --- iPhone build: save timing for the diagnostics panel (added by tools/build.mjs) --- */
+export const saveData = (...args) => {
+	const t = performance.now();
+	const result = __ppSaveData(...args);
+	if (window.__ppSlow) window.__ppSlow('save', performance.now() - t, (window.localStorage.getItem('data') || '').length + ' chars');
+	return result;
+};
+`;
+	});
 }
 
 function checkAssumptions() {
@@ -394,6 +427,7 @@ log('Applying iPhone patches');
 patchIndex();
 patchTooltip();
 patchGame();
+patchSaveTiming();
 replaceAudio();
 patchInitPreload();
 patchHoverCss();

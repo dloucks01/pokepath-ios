@@ -257,8 +257,27 @@ def main():
     # --- Wave + sound.
     tap("nextWave", settle=2)
     check("NEXT WAVE starts a wave", wait_state("wave", True, 5))
-    time.sleep(15)
+    time.sleep(8)
     shot("wave")
+
+    # --- Stress: faster game speed + auto waves for a minute.
+    for _ in range(4):
+        tap("speed", settle=0.6)
+    tap("autoWave", settle=1.0)
+    note("stress phase: speed x4 taps + auto waves, 60 s")
+    time.sleep(60)
+    shot("stress")
+    slow = [l.split("[pp] ", 1)[1] for l in console_lines() if "[pp] SLOW" in l]
+    frames = [int(re.search(r"SLOW frame (\d+)ms", l).group(1)) for l in slow if "SLOW frame" in l]
+    saves = [int(re.search(r"SLOW save (\d+)ms", l).group(1)) for l in slow if "SLOW save" in l]
+    note(f"slow frames: {len(frames)} worst={max(frames, default=0)}ms; slow saves: {saves}")
+    for l in slow[:15]:
+        note("  " + l[:220])
+    blocked = [l.split("[pp] ", 1)[1] for l in console_lines() if "[pp] BLOCKED" in l]
+    for l in blocked[:15]:
+        note("  " + l[:220])
+    check("no game frame slower than 100 ms", max(frames, default=0) <= 100, f"{len(frames)} frames over 40 ms, worst {max(frames, default=0)} ms")
+    check("saves take under 50 ms", max(saves, default=0) < 50, f"saves over 15 ms: {saves}")
     sounds = sound_lines()
     last = sounds[-1] if sounds else {}
     peak = {k: max((s.get("peak", {}).get(k, 0) for s in sounds), default=0) for k in ("ui", "effect", "music")}
