@@ -68,6 +68,9 @@ function installMeters() {
 			time: Math.round(ctx.currentTime),
 			music: current ? current.name : null,
 			started: { ...started },
+			loaded: loadStats.ok,
+			failed: loadStats.failed,
+			lastError: loadStats.lastError,
 			peak: Object.fromEntries(Object.entries(peaks).map(([k, v]) => [k, Math.round(v * 1000) / 1000])),
 			gain: Object.fromEntries(Object.entries(gains).map(([k, g]) => [k, Math.round(g.gain.value * 1000) / 1000]))
 		};
@@ -121,6 +124,7 @@ export function setVolume() {
 
 /* ------------------------------------------------------------------ loading */
 const buffers = new Map(); // url -> AudioBuffer | Promise<AudioBuffer>
+const loadStats = { ok: 0, failed: 0, lastError: '' };
 
 function load(url) {
 	const have = buffers.get(url);
@@ -139,9 +143,15 @@ function load(url) {
 		}))
 		.then((buffer) => {
 			buffers.set(url, buffer);
+			loadStats.ok++;
 			return buffer;
 		});
-	p.catch(() => buffers.delete(url));
+	p.catch((err) => {
+		buffers.delete(url);
+		loadStats.failed++;
+		loadStats.lastError = `${url.split('/').slice(-2).join('/')}: ${err && (err.name || '')} ${err && (err.message || err)}`.slice(0, 200);
+		if (window.PP_DEBUG && loadStats.failed <= 5) console.log('[pp] AUDIO load failed ' + loadStats.lastError);
+	});
 	buffers.set(url, p);
 	return p;
 }

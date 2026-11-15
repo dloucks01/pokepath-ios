@@ -158,7 +158,7 @@ def sound_lines():
     for line in console_lines():
         if "[pp] STATUS" in line and "sound={" in line:
             try:
-                out.append(json.loads(line.split("sound=", 1)[1]))
+                out.append(json.loads(line.split("sound=", 1)[1].split(" counts=", 1)[0]))
             except json.JSONDecodeError:
                 pass
     return out
@@ -264,6 +264,7 @@ def main():
     peak = {k: max((s.get("peak", {}).get(k, 0) for s in sounds), default=0) for k in ("ui", "effect", "music")}
     note(f"sound summary: last={last} peaks={peak}")
     check("audio engine running", last.get("state") == "running", f"state={last.get('state')} time={last.get('time')}s")
+    check("sound files load and decode", last.get("loaded", 0) > 10 and last.get("failed", 0) == 0, f"loaded={last.get('loaded')} failed={last.get('failed')} lastError={last.get('lastError')}")
     check("UI sounds produce audio signal", peak["ui"] > 0.001, f"peak={peak['ui']} started={last.get('started', {}).get('ui')}")
     check("music plays", peak["music"] > 0.001, f"peak={peak['music']} track={last.get('music')}")
     check("battle sound effects produce audio signal", peak["effect"] > 0.001, f"peak={peak['effect']} started={last.get('started', {}).get('effect')}")
